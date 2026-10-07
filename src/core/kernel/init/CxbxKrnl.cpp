@@ -39,7 +39,7 @@
 #include <float.h> // For _controlfp constants
 
 #include "Logging.h" // For LOG_FUNC()
-#include "EmuKrnlLogging.h"
+#include "core\kernel\exports\EmuKrnlLogging.h"
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnl_TLS
 #include "EmuKrnl.h"
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
