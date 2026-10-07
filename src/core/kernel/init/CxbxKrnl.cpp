@@ -32,7 +32,7 @@
 
 
 #include <core\kernel\exports\xboxkrnl.h> // For PsCreateSystemThreadEx, etc.
-#include "EmuKrnlPs.hpp"
+#include "core\kernel\exports\EmuKrnlPs.hpp"
 #include "core\kernel\exports\EmuKrnlKi.h"
 #include "core\kernel\exports\EmuKrnlKe.h"
 #include <process.h> // For __beginthreadex(), etc.
