@@ -1329,21 +1329,6 @@ static void CxbxrKrnlInitHacks()
 
 	EmuInitFS();
 
-	// Keep a diagnostic record even when the title is not detected as Chihiro.
-	{
-		const std::string bootLogPath = (g_DataFilePath.empty() ? std::string(".") : g_DataFilePath) + "\\jvs_input.log";
-		FILE* bootLog = fopen(bootLogPath.c_str(), "wt");
-		if (bootLog == nullptr) {
-			bootLog = fopen("jvs_input.log", "wt");
-		}
-		if (bootLog != nullptr) {
-			fprintf(bootLog, "Kernel reached JVS setup; Chihiro=%u, data path=%s, title ID=%08X\n",
-				(unsigned)g_bIsChihiro, g_DataFilePath.c_str(),
-				(CxbxKrnl_Xbe != nullptr) ? CxbxKrnl_Xbe->m_Certificate.dwTitleId : 0);
-			fclose(bootLog);
-		}
-	}
-
 	// If this title is Chihiro, Setup JVS
 	if (g_bIsChihiro) {
 		JVS_Init();
