@@ -4,6 +4,7 @@
 
 namespace JvsInput {
 void Init(const std::string& dataPath, const std::string& executable);
+bool IsEnabled();
 void Poll();
 const jvs_input_states_t& GetState();
 bool Test();

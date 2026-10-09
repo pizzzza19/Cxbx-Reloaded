@@ -134,6 +134,20 @@ JvsIo::JvsIo(uint8_t* sense)
 
 void JvsIo::Update()
 {
+	if (!JvsInput::IsEnabled()) {
+		// Preserve the existing controls for games other than HOD3.
+		static bool previousCoinButtonsState = false;
+		const bool currentCoinButtonState = GetAsyncKeyState('5');
+		if (currentCoinButtonState && !previousCoinButtonsState) Inputs.coins[0].coins += 1;
+		previousCoinButtonsState = currentCoinButtonState;
+		Inputs.switches.player[0].start = GetAsyncKeyState('1');
+		Inputs.analog[1].value = GetAsyncKeyState(VK_LEFT) ? 0x9000 : (GetAsyncKeyState(VK_RIGHT) ? 0x7000 : 0x8000);
+		Inputs.switches.player[0].up = GetAsyncKeyState(VK_UP);
+		Inputs.switches.player[0].down = GetAsyncKeyState(VK_DOWN);
+		Inputs.switches.player[0].button[0] = GetAsyncKeyState('A');
+		Inputs.switches.player[0].button[1] = GetAsyncKeyState('S');
+		return;
+	}
 	const auto& frame = JvsInput::GetState();
 	std::lock_guard<std::mutex> lock(IoBoardMutex);
 	Inputs.switches = frame.switches;

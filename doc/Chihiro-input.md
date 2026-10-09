@@ -1,13 +1,13 @@
-# Chihiro input
+# HOD3 input
 
 The input profile is selected from the media board's game executable, so
 Segaboot and the game's test executable use the same controls as the game.
 If the boot ID has no executable, the launched XBE path is used instead.
 Profiles are generated in the Cxbx data directory on first launch:
 
-- `chihiro_input_outrun2.ini`: OutRun2, including variants with this executable name.
 - `chihiro_input_hod3xb.ini`: HOD3 when the boot ID specifies `hod3xb.xbe`.
-- `chihiro_input_default.ini`: other games, retaining the Ollie King keyboard axes.
+
+Only HOD3 uses these profiles. Other games retain their existing controls.
 
 An existing profile is preserved. Edits are reloaded once per second.
 Profile section and key names use the spelling shown in the generated file.
@@ -17,8 +17,6 @@ Profile section and key names use the spelling shown in the generated file.
 | P1 / P2 start | 1 / 2 | Start on controller 1 / 2 |
 | P1 / P2 coin | 5 / 6 | Back on controller 1 / 2 |
 | Test / service | F1 / F2 | Configurable |
-| OutRun2 steering | Left / Right | Left stick X |
-| OutRun2 accelerator / brake | Up / Down | RT / LT |
 | P1 buttons 1–4 | A / S / D / F | A or RT / B / X / Y |
 | P2 buttons 1–4 | J / K / L / P | A or RT / B / X / Y |
 | HOD3 P1 aim | Mouse | Select stick sources in the profile |
@@ -26,12 +24,11 @@ Profile section and key names use the spelling shown in the generated file.
 | HOD3 P2 aim | — | Controller 2 left stick |
 
 `[Analog1]` through `[Analog8]` correspond to JVS channels 1 through 8.
-OutRun2 defaults use channels 1–3 for steering, accelerator and brake.
 HOD3 defaults use channels 1–4 for P1 X/Y and P2 X/Y.
-`Range=Unipolar` maps pedals to 0–65535; `Bipolar` maps axes around 32768.
+Axes are centered around 32768.
 `Invert=1`, `Deadzone`, and `KeyDeflection` allow adjustments.
 Supported sources are `MouseX`, `MouseY`, `LStickX`, `LStickY`,
-`RStickX`, `RStickY`, `LT` and `RT`. An empty source disables device input.
+`RStickX` and `RStickY`. An empty source disables device input.
 `Pad=1` or `Pad=2` selects the controller for an analog channel.
 `KeyMin` and `KeyMax` accept the same bindings as buttons.
 

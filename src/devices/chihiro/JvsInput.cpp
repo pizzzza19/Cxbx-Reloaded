@@ -16,6 +16,7 @@ extern HWND g_hEmuWindow;
 namespace JvsInput {
 namespace {
 std::string profile;
+bool enabled = false;
 jvs_input_states_t state;
 bool test = false, service = false, mouseActive = false;
 float mouseX = 0, mouseY = 0;
@@ -125,8 +126,6 @@ uint16_t Axis(const std::string& section) {
   if (source == "LStickY") value = Clamp(pad.sThumbLY / 32767.0f);
   if (source == "RStickX") value = Clamp(pad.sThumbRX / 32767.0f);
   if (source == "RStickY") value = Clamp(pad.sThumbRY / 32767.0f);
-  if (source == "LT") value = pad.bLeftTrigger / 255.0f;
-  if (source == "RT") value = pad.bRightTrigger / 255.0f;
   if (source.find("Stick") != std::string::npos) {
    const float deadzone = (std::max)(0.0f, (std::min)(0.99f, (float)atof(Read(section, "Deadzone", "0.1").c_str())));
    value = std::fabs(value) <= deadzone ? 0 : std::copysign((std::fabs(value) - deadzone) / (1 - deadzone), value);
@@ -136,10 +135,8 @@ uint16_t Axis(const std::string& section) {
  if (Pressed(Read(section, "KeyMin"), player)) value -= deflection;
  if (Pressed(Read(section, "KeyMax"), player)) value += deflection;
  value = Clamp(value);
- const bool unipolar = Read(section, "Range") == "Unipolar";
- if (unipolar) value = (std::max)(0.0f, value);
- if (Read(section, "Invert", "0") == "1") value = unipolar ? 1 - value : -value;
- const long result = unipolar ? std::lround(value * 65535) : 32768 + std::lround(value * 32768);
+ if (Read(section, "Invert", "0") == "1") value = -value;
+ const long result = 32768 + std::lround(value * 32768);
  return (uint16_t)(std::max)(0L, (std::min)(65535L, result));
 }
 }
@@ -150,31 +147,20 @@ void SetRenderBounds(float left, float top, float right, float bottom) {
 void Init(const std::string& dataPath, const std::string& executable) {
  std::string name = std::filesystem::path(executable).stem().string();
  std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) { return (char)tolower(c); });
- const bool gun = name.find("hod3") != std::string::npos;
- const bool racing = name.find("outrun") != std::string::npos;
- if (!gun && !racing) name = "default";
+ enabled = name.find("hod3") != std::string::npos;
+ if (!enabled) return;
  profile = (std::filesystem::path(dataPath) / ("chihiro_input_" + name + ".ini")).string();
  if (!std::filesystem::exists(profile)) {
   std::ofstream out(profile);
   out << "; Live input profile. Pad refers to the player's XInput controller.\n[General]\nRequireFocus=1\nMouseAspectRatio=0\n\n[System]\nCoin1=Key.5,Pad.Back\nCoin2=Key.6,Pad.Back\nTest=Key.F1\nService=Key.F2\n";
   for (int p = 0; p < 2; ++p) {
    out << "\n[Player" << p + 1 << "]\nStart=Key." << p + 1 << ",Pad.Start\nService=Key.F2\nUp=Key.Up,Pad.Up\nDown=Key.Down,Pad.Down\nLeft=Key.Left,Pad.Left\nRight=Key.Right,Pad.Right\n";
-   out << "Button1=" << (gun && p == 0 ? "Mouse.Left," : "") << (p == 0 ? "Key.A" : "Key.J") << ",Pad.A,Pad.RT\nButton2=" << (gun && p == 0 ? "Mouse.Right," : "") << (p == 0 ? "Key.S" : "Key.K") << ",Pad.B\nButton3=" << (p == 0 ? "Key.D" : "Key.L") << ",Pad.X\nButton4=" << (p == 0 ? "Key.F" : "Key.P") << ",Pad.Y\n";
+   out << "Button1=" << (p == 0 ? "Mouse.Left," : "") << (p == 0 ? "Key.A" : "Key.J") << ",Pad.A,Pad.RT\nButton2=" << (p == 0 ? "Mouse.Right," : "") << (p == 0 ? "Key.S" : "Key.K") << ",Pad.B\nButton3=" << (p == 0 ? "Key.D" : "Key.L") << ",Pad.X\nButton4=" << (p == 0 ? "Key.F" : "Key.P") << ",Pad.Y\n";
   }
   for (int a = 0; a < 8; ++a) {
    out << "\n[Analog" << a + 1 << "]\nSource=";
-   if (gun && a < 4) out << (a < 2 ? (a % 2 ? "MouseY" : "MouseX") : (a % 2 ? "LStickY" : "LStickX"));
-   else if (racing && a < 3) out << (a == 0 ? "LStickX" : a == 1 ? "RT" : "LT");
-   else if (!gun && !racing && a == 1) out << "LStickX";
-   out << "\nPad=" << (gun && a >= 2 ? 2 : 1) << "\nRange=" << (racing && (a == 1 || a == 2) ? "Unipolar" : "Bipolar") << "\nInvert=" << (gun && a == 3 ? 1 : 0) << "\nDeadzone=0.1\nKeyMin=";
-   if (racing && a == 0) out << "Key.Left";
-   if (!gun && !racing && a == 1) out << "Key.Right";
-   out << "\nKeyMax=";
-   if (racing && a == 0) out << "Key.Right";
-   if (!gun && !racing && a == 1) out << "Key.Left";
-   if (racing && a == 1) out << "Key.Up";
-   if (racing && a == 2) out << "Key.Down";
-   out << "\nKeyDeflection=" << (!gun && !racing && a == 1 ? "0.125" : "1") << '\n';
+   if (a < 4) out << (a < 2 ? (a % 2 ? "MouseY" : "MouseX") : (a % 2 ? "LStickY" : "LStickX"));
+   out << "\nPad=" << (a >= 2 ? 2 : 1) << "\nInvert=" << (a == 3 ? 1 : 0) << "\nDeadzone=0.1\nKeyMin=\nKeyMax=\nKeyDeflection=1\n";
   }
  }
  Reload();
@@ -184,6 +170,7 @@ void Init(const std::string& dataPath, const std::string& executable) {
  }
 }
 void Poll() {
+ if (!enabled) return;
  const ULONGLONG now = GetTickCount64();
  if (now >= nextReload) { Reload(); nextReload = now + 1000; }
  const HWND foreground = GetForegroundWindow();
@@ -191,8 +178,6 @@ void Poll() {
   (foreground == g_hEmuWindow || GetAncestor(g_hEmuWindow, GA_ROOT) == foreground);
  if (Read("General", "RequireFocus", "1") != "0" && !focused) {
   state = {}; test = service = false;
-  // Pedals rest at zero, while bipolar channels rest at their center.
-  for (int a = 0; a < 8; ++a) if (Read("Analog" + std::to_string(a + 1), "Range") == "Unipolar") state.analog[a].value = 0;
   return;
  }
  for (int p = 0; p < 2; ++p) {
@@ -220,6 +205,7 @@ void Poll() {
  for (int a = 0; a < 8; ++a) state.analog[a].value = Axis("Analog" + std::to_string(a + 1));
 }
 const jvs_input_states_t& GetState() { return state; }
+bool IsEnabled() { return enabled; }
 bool Test() { return test; }
 bool Service() { return service; }
 }
